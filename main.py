@@ -72,9 +72,16 @@ elif a == "2":
         print("Please type a valid choice")
 elif a == "3":
     animation_files = ["input_files/ResultHydro_p0000d00h00m10s000.txt", "input_files/ResultHydro_p0000d00h00m11s000.txt"]
-    data = "zb"
-    # animation_helper.draw_scatter_animation(data, filenames=animation_files)
-    animation_helper.draw_quiver_animation(animation_files)
+    anim_type = print_question("What type of animation do you want ?", ["Water_depth", "unit_discharge", "zb"])
+    if anim_type == "1":
+        animation_helper.draw_scatter_animation("water_depth", filenames=animation_files)
+    elif anim_type == "2":
+        animation_helper.draw_quiver_animation(animation_files)
+    elif anim_type == "3":
+        animation_helper.draw_scatter_animation("zb", filenames=animation_files)
+    else:
+        print("this is not a valid choice !")
+
 
 else:
     print("Invalid choice")
