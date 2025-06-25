@@ -1,6 +1,8 @@
 import matplotlib.cm
 import matplotlib.pyplot as plt
+
 import parser
+import animation_helper
 
 def print_question(question, choice_list, default="1", input_text="Your choice [{}] : "):
     """This function print a list of answer and prompt the user to select one"""
@@ -24,12 +26,12 @@ def ask_user(question, choice_list, default="1", input_text="Your choice [{}] : 
                 return choice_list[a - 1]
             else:
                 print("Please pick something valid")
-        except:
+        except ValueError:
             print("Please pick something valid")
 
 
 
-a = print_question("What do you want to do ?", ["Use a ProbeTimeSeries file", "Use a ResultHydro file"])
+a = print_question("What do you want to do ?", ["Use a ProbeTimeSeries file", "Use a ResultHydro file", "Use a ProbeTimeSeries file to generate an animation"])
 if a == "1":
     probes, data = parser.probe_parser("input_files/ProbesTimeSeries.txt")
     selected_data = ask_user("What data do you want to view ?", ["zb", "h", "q", "r"])
@@ -64,10 +66,16 @@ elif a == "2":
         fig.colorbar(matplotlib.cm.ScalarMappable(cmap="Blues",
                                                   norm=matplotlib.colors.Normalize(vmin=min(mesh_data["zb"]),
                                                                                    vmax=max(mesh_data["zb"]))),
-                     ax=ax)
+                    ax=ax)
         plt.show()
     else:
         print("Please type a valid choice")
+elif a == "3":
+    animation_files = ["input_files/ResultHydro_p0000d00h00m10s000.txt", "input_files/ResultHydro_p0000d00h00m11s000.txt"]
+    data = "zb"
+    # animation_helper.draw_scatter_animation(data, filenames=animation_files)
+    animation_helper.draw_quiver_animation(animation_files)
+
 else:
     print("Invalid choice")
     exit()
