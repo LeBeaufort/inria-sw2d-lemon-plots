@@ -9,7 +9,7 @@ import animation_helper
 parser = argparse.ArgumentParser()
 parser.add_argument("task", choices=["probe", "map", "animation"], help="What the program is going to do")
 parser.add_argument("path", help="the path of the file used to generate plot or regex that match file used to generate animation")
-parser.add_argument("--data", help="What data is the program going to use. Not necessary if listing probes")
+parser.add_argument("--data", help="What data is the program going to use. Not necessary if listing probes. Data can be zb, h, q, r (with probes) or zb, water_depth, unit_discharge (with map or animation)")
 parser.add_argument("--save-path", help="the path where plot are saved")
 parser.add_argument("--list-probes", help="list probes from a file",  action=argparse.BooleanOptionalAction)
 parser.add_argument("--probe-name", help="Name of the probe, leave empty for all probes")
