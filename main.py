@@ -1,91 +1,68 @@
 import matplotlib.cm
 import matplotlib.pyplot as plt
+from glob import glob
+import argparse
 
-import parser
+import file_parser
 import animation_helper
 
-def print_question(question, choice_list, default="1", input_text="Your choice [{}] : "):
-    """This function print a list of answer and prompt the user to select one"""
-    print(question)
-    for number, answer in enumerate(choice_list):
-        print(f"[{number + 1}] {answer}")
+parser = argparse.ArgumentParser()
+parser.add_argument("task", choices=["probe", "map", "animation"], help="What the program is going to do")
+parser.add_argument("path", help="the path of the file used to generate plot or regex that match file used to generate animation")
+parser.add_argument("--data", help="What data is the program going to use. Not necessary if listing probes")
+parser.add_argument("--save-path", help="the path where plot are saved")
+parser.add_argument("--list-probes", help="list probes from a file",  action=argparse.BooleanOptionalAction)
+parser.add_argument("--probe-name", help="Name of the probe, leave empty for all probes")
 
-    i = input(input_text.format(default)).replace(" ", "")
-    if i:
-        return i
+args = parser.parse_args()
+
+if args.task == "probe":
+    probes, data = file_parser.probe_parser(args.path)
+    valid_d = ["zb", "h", "q", "r"]
+
+    if args.list_probes:
+        print(f"There is {len(probes)} probes: {probes}")
+
+    if not args.data: exit()
+    if not args.data in valid_d:
+        exit(f"Invalid data for this option, valid data are {valid_d}")
+
+    if args.probe_name:
+        if not args.probe_name in probes: exit("Probe does not exist !")
+        plt.plot(data["time"], data[f"{args.probe}_{args.data}"])
+        plt.show()
     else:
-        return default
-
-
-def ask_user(question, choice_list, default="1", input_text="Your choice [{}] : "):
-    while True:
-        a = print_question(question, choice_list, default, input_text)
-        try:
-            a = int(a)
-            if a <= len(choice_list):
-                return choice_list[a - 1]
-            else:
-                print("Please pick something valid")
-        except ValueError:
-            print("Please pick something valid")
-
-
-
-a = print_question("What do you want to do ?", ["Use a ProbeTimeSeries file", "Use a ResultHydro file", "Use a ProbeTimeSeries file to generate an animation"])
-if a == "1":
-    probes, data = parser.probe_parser("input_files/ProbesTimeSeries.txt")
-    selected_data = ask_user("What data do you want to view ?", ["zb", "h", "q", "r"])
-    probe_n = print_question("What do you want to do ?", ["All probes", "One probe only"])
-    if probe_n == "1":
         for probe in probes:
-            plt.plot(data["time"], data[f"{probe}_{selected_data}"])
-        plt.show()
-    else:
-        selected_probe = ask_user("What probe do you want to view ?", probes)
-        plt.plot(data["time"], data[f"{selected_probe}_{selected_data}"])
-        plt.show()
+            plt.plot(data["time"], data[f"{probe}_{args.data}"])
 
-elif a == "2":
-    file_name = "input_files/ResultHydro_p0000d09h00m00s000.txt"
-    mesh_data = parser.ResultHydro_parser(file_name)
+        plt.savefig(args.save_path) if args.save_path else plt.show()
 
-    plot_type = print_question("What type of plot do you want ?", ["Water_depth", "unit_discharge", "zb"])
-    if plot_type == "1":
-        fig, ax = plt.subplots()
-        plt.scatter(mesh_data["x"], mesh_data["y"], c=mesh_data["water_depth"], cmap="Blues")
-        fig.colorbar(matplotlib.cm.ScalarMappable(cmap="Blues", norm=matplotlib.colors.Normalize(vmin=min(mesh_data["water_depth"]), vmax=max(mesh_data["water_depth"]))), ax=ax)
-        plt.show()
-    elif plot_type == "2":
-        fig, ax = plt.subplots()
+elif args.task == "map":
+    if not args.data: exit("No data specified")
+
+    mesh_data = file_parser.ResultHydro_parser(args.path)
+    fig, ax = plt.subplots()
+
+    if args.data == "water_depth" or args.data == "zb":
+        plt.scatter(mesh_data["x"], mesh_data["y"], c=mesh_data[args.data], cmap="Blues")
+        fig.colorbar(matplotlib.cm.ScalarMappable(cmap="Blues", norm=matplotlib.colors.Normalize(vmin=min(mesh_data[args.data]), vmax=max(mesh_data[args.data]))), ax=ax)
+        plt.savefig(args.save_path) if args.save_path else plt.show() # save to disk if --save-path has been passed, else show the plot
+    elif args.data == "unit_discharge":
         plt.quiver(mesh_data["x"], mesh_data["y"], mesh_data["unit_discharge_x"], mesh_data["unit_discharge_y"], mesh_data["unit_discharge_norm"], cmap="viridis")
         fig.colorbar(matplotlib.cm.ScalarMappable(cmap="viridis", norm=matplotlib.colors.Normalize(vmin=min(mesh_data["unit_discharge_norm"]), vmax=max(mesh_data["unit_discharge_norm"]))), ax=ax)
-        plt.show()
-    elif plot_type == "3":
-        fig, ax = plt.subplots()
-        plt.scatter(mesh_data["x"], mesh_data["y"], c=mesh_data["zb"], cmap="Blues")
-        fig.colorbar(matplotlib.cm.ScalarMappable(cmap="Blues",
-                                                  norm=matplotlib.colors.Normalize(vmin=min(mesh_data["zb"]),
-                                                                                   vmax=max(mesh_data["zb"]))),
-                    ax=ax)
-        plt.show()
+        plt.savefig(args.save_path) if args.save_path else plt.show()
     else:
-        print("Please type a valid choice")
-elif a == "3":
-    animation_files = ["input_files/ResultHydro_p0000d00h00m10s000.txt", "input_files/ResultHydro_p0000d00h00m11s000.txt"]
-    anim_type = print_question("What type of animation do you want ?", ["Water_depth", "unit_discharge", "zb"])
-    if anim_type == "1":
-        animation_helper.draw_scatter_animation("water_depth", filenames=animation_files)
-    elif anim_type == "2":
+        exit("Invalid data ! Valid data are `water_depth` `zb` and `unit_discharge`")
+
+elif args.task == "animation":
+    if not args.data: exit("No data specified")
+    animation_files = glob(args.path)
+    if args.data == "water_depth" or args.data == "zb":
+        animation_helper.draw_scatter_animation(args.data, filenames=animation_files)
+    elif args.data == "unit_discharge":
         animation_helper.draw_quiver_animation(animation_files)
-    elif anim_type == "3":
-        animation_helper.draw_scatter_animation("zb", filenames=animation_files)
     else:
-        print("this is not a valid choice !")
-
-
-else:
-    print("Invalid choice")
-    exit()
+        exit("Invalid data ! Valid data are `water_depth` `zb` and `unit_discharge`")
 
 
 

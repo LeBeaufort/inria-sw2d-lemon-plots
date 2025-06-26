@@ -1,10 +1,10 @@
-import parser
+import file_parser
 from matplotlib import pyplot as plt
 import matplotlib
 from matplotlib import animation
 
 def draw_scatter_animation(data:str, filenames: list[str]):
-    animation_data = [parser.ResultHydro_parser(c) for c in filenames]
+    animation_data = [file_parser.ResultHydro_parser(c) for c in filenames]
 
     min_value, max_value = 0, 0
     for each in animation_data:
@@ -24,10 +24,11 @@ def draw_scatter_animation(data:str, filenames: list[str]):
         return scat
 
     ani = animation.FuncAnimation(fig=fig, func=update, frames=len(filenames), interval=300)
+    ani.save("./test.html", writer="html")
     plt.show()
 
 def draw_quiver_animation(filenames: list[str]):
-    animation_data = [parser.ResultHydro_parser(c) for c in filenames]
+    animation_data = [file_parser.ResultHydro_parser(c) for c in filenames]
 
     min_value, max_value = 0, 0
     for each in animation_data:
