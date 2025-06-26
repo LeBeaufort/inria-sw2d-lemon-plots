@@ -1,10 +1,20 @@
+class InvalidInputFileError(Exception):
+    def __init__(self, msg):
+        super().__init__(msg)
+
 def ResultHydro_parser(filename):
     file = open(filename, "r")
 
     mesh_data = {}
+    first_line = file.readline().split()
+
+    if len(first_line) != 7:
+        print("[WARN] Number of entry is different than 7")
+        if len(first_line) == 3:
+            print("[WARN] the input file may be a ProbeTimeSeries file")
 
     # create keys with file headers
-    for k in file.readline().split(): mesh_data[k] = []
+    for k in first_line: mesh_data[k] = []
 
     key_list = list(mesh_data.keys())
     for line in file:
@@ -18,8 +28,10 @@ def probe_parser(filename):
     probe_list = []
     data = {}
 
-
     file = open(filename, "r")
+
+    if file.readline() != 3:
+        raise InvalidInputFileError("The file contains no probe or it is not a ProbeTimeSeries file")
 
     for line in file:
         l = line.split()
