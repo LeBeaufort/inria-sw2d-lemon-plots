@@ -2,9 +2,12 @@ import matplotlib.cm
 import matplotlib.pyplot as plt
 from glob import glob
 import argparse
+import imageio_ffmpeg
 
 import file_parser
 import animation_helper
+
+matplotlib.rcParams["animation.ffmpeg_path"] = imageio_ffmpeg.get_ffmpeg_exe()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("task", choices=["probe", "map", "animation"], help="What the program is going to do")
@@ -58,9 +61,9 @@ elif args.task == "animation":
     if not args.data: exit("No data specified")
     animation_files = glob(args.path)
     if args.data == "water_depth" or args.data == "zb":
-        animation_helper.draw_scatter_animation(args.data, filenames=animation_files)
+        animation_helper.draw_scatter_animation(args.data, filenames=animation_files, o=args.save_path)
     elif args.data == "unit_discharge":
-        animation_helper.draw_quiver_animation(animation_files)
+        animation_helper.draw_quiver_animation(animation_files, o=args.save_path)
     else:
         exit("Invalid data ! Valid data are `water_depth` `zb` and `unit_discharge`")
 
