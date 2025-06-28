@@ -29,8 +29,7 @@ def probe_parser(filename):
     data = {}
 
     file = open(filename, "r")
-
-    if file.readline() != 3:
+    if len(file.readline().split()) != 3:
         raise InvalidInputFileError("The file contains no probe or it is not a ProbeTimeSeries file")
 
     for line in file:

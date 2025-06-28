@@ -35,8 +35,10 @@ if args.task == "probe":
         plt.plot(data["time"], data[f"{args.probe}_{args.data}"])
         plt.show()
     else:
+        fig, ax = plt.subplots()
         for probe in probes:
-            plt.plot(data["time"], data[f"{probe}_{args.data}"])
+            ax.plot(data["time"], data[f"{probe}_{args.data}"], label=probe)
+        fig.legend()
 
         plt.savefig(args.save_path) if args.save_path else plt.show()
 
